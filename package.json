@@ -1,0 +1,21 @@
+{
+  "name": "playwright-bdd-ddd-api",
+  "version": "1.0.0",
+  "description": "A Playwright test automation project for UI and api end to end testing",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test tests/ui.e2e.spec.js",
+    "test:api": "playwright test tests/api.e2e.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://localhost:26831/samirbhusal/playwright-bdd-ddd-api"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}
