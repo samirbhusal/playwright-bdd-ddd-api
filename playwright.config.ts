@@ -1,20 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
-import { existsSync } from "node:fs";
-import { ConfigReader } from "./tests/core/ConfigReader";
+import { ConfigReader } from "./tests/core/configReader";
 import { defineBddConfig } from "playwright-bdd";
-
-
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
-
-if (existsSync(".env")) {
-  process.loadEnvFile();
-}
 
 const bddConfigs = defineBddConfig({
   features: ["./tests/**/**/features/*.feature"],
