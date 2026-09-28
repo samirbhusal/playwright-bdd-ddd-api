@@ -37,4 +37,4 @@ npm test
 npm run lint
 ```
 
-`npm test` generates the Playwright tests from feature files, then runs them in Chromium. The default environment is `dev`, with its base URL set in `tests/configs/env.configs.ts`.
+`npm test` generates the Playwright tests from feature files, then runs them in Chromium. The default environment is `dev`, with its base URL set in `tests/configs/env.config.ts`.
