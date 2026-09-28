@@ -1,22 +1,24 @@
 import { envConfig } from "../configs/env.config";
 import { runConfig } from "../configs/run.config";
+import { envType, plaftormType } from "../utils/types";
+
 
 export class ConfigReader {
-  static getPlatform(): string {
-    return runConfig.platform;
+  static getPlatform(): plaftormType {
+    return runConfig.platform as plaftormType;
   }
 
-  static getEnv(): string {
-    return runConfig.platformValues.env;
+  static getEnv(): envType {
+    return runConfig.platformValues.env as envType;
   }
 
   static getBaseUrl(): string {
-    const env = this.getEnv();
 
-    if (!envConfig[env as keyof typeof envConfig]) {
-      throw new Error(`Environment configuration for '${env}' is not defined.`);
+    if (!envConfig[this.getPlatform()][this.getEnv()]) {
+      throw new Error(`Environment configuration for '${this.getEnv()}' is not defined for platform '${this.getPlatform()}'.`);
     }
-    return envConfig[env as keyof typeof envConfig].baseUrl;
+
+    return envConfig[this.getPlatform()][this.getEnv()];
   }
 
   static getTags(): string {

@@ -17,12 +17,18 @@ Put feature files in a `features` folder under `tests`, and their TypeScript ste
 tests/
   api/
     features/
-      users.feature
+      login.feature
+      shoppingCart.feature
     steps/
-      users.ts
+      login.ts
+      shoppingCart.ts
 ```
 
 The default tag filter is `@api`, so add `@api` to features or scenarios you want to run.
+
+### Naming
+
+Use camelCase for project-owned files and directories. For example, use `shoppingCart.feature`, `shoppingCart.ts`, `configReader.ts`, and `pageObjects/`. Keep required names and suffixes such as `package.json`, `playwright.config.ts`, and `.feature` as they are. Match the capitalization of file and directory names exactly in imports and configuration paths.
 
 ## Run
 
