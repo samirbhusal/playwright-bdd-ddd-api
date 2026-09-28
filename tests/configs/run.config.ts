@@ -1,6 +1,7 @@
 export const runConfig = {
-  platform: "api",
+  platform: process.env.PLATFORM || "api",
   platformValues: {
-    env: "dev",
+    env: process.env.ENV || "dev",
+    tags: process.env.TAGS || "@api",
   },
 };

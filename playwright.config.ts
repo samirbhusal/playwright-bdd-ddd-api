@@ -1,10 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 import { existsSync } from "node:fs";
 import { ConfigReader } from "./tests/core/ConfigReader";
+import { defineBddConfig } from "playwright-bdd";
 
-if (existsSync(".env")) {
-  process.loadEnvFile();
-}
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -13,11 +12,21 @@ if (existsSync(".env")) {
 // import path from 'path';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+if (existsSync(".env")) {
+  process.loadEnvFile();
+}
+
+const bddConfigs = defineBddConfig({
+  features: ["./tests/**/**/features/*.feature"],
+  steps: ["./tests/**/**/steps/*.ts"],
+  tags: ConfigReader.getTags(),
+});
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: "./tests",
+  testDir: bddConfigs,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
