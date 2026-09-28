@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+
+    // Enable strict type-checking options
+    "strict": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
