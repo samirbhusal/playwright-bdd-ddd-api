@@ -18,4 +18,8 @@ export class ConfigReader {
     }
     return envConfig[env as keyof typeof envConfig].baseUrl;
   }
+
+  static getTags(): string {
+    return runConfig.platformValues.tags;
+  }
 }

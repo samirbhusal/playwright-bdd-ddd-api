@@ -4,7 +4,7 @@
   "description": "A Playwright BDD DDD API project",
   "main": "index.js",
   "scripts": {
-    "test": "npx playwright test",
+    "test": "npx bddgen && npx playwright test",
     "lint": "npx eslint ."
   },
   "keywords": [],
@@ -15,8 +15,12 @@
     "@playwright/test": "^1.63.0",
     "@types/node": "^26.6.3",
     "eslint": "^10.11.0",
+    "playwright-bdd": "^9.2.1",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.4"
   }
 }
