@@ -1,19 +1,17 @@
 # Playwright BDD Framework
 
-TypeScript test framework using Playwright, Gherkin feature files, page objects, and API services. Step definitions access POMs through `webPageFactory` and API services through `serviceFactory`.
+Automated UI and API tests using Playwright and TypeScript. Feature files define the steps; page objects and API services perform the actions and checks.
 
-The current web scenario opens the shop and verifies its login page. Credential entry and login submission are commented out in the feature file and are not implemented yet.
+## Setup
 
-## Project setup
-
-Use Node.js 24 and npm. Run the following commands from the project root:
+Use Node.js 24 and npm. From the project root:
 
 ```sh
 npm ci
-npx playwright install chromium
+npx playwright install chromium # Required for UI tests only
 ```
 
-Create a `.env` file in the project root to select the suite, environment, and scenarios:
+Create `.env` beside `package.json`:
 
 ```dotenv
 PLATFORM=api
@@ -21,139 +19,114 @@ ENV=dev
 TAGS=@API-001
 ```
 
-Then run:
+Run:
 
 ```sh
 npm test
 ```
 
-The `.env` file is ignored by Git. Without overrides, the framework defaults to `PLATFORM=api`, `ENV=dev`, and no tag filter. Set `PLATFORM=web` and `TAGS=@web` to run UI tests using the same `npm test` command.
+## Configuration
 
-## Environment configuration
-
-Configuration is read from environment variables and the root `.env` file in `tests/configs/run.config.ts`. Variables set in the shell take precedence over `.env` values.
-
-| Variable | Supported values | Default | Purpose |
+| Setting | Purpose | Values | Default |
 | --- | --- | --- | --- |
-| `PLATFORM` | `web`, `api` | `api` | Selects the UI or API project. |
-| `ENV` | `dev`, `stg`, `qa` | `dev` | Selects the target environment. |
-| `TAGS` | Gherkin tag expression | No filter | Selects scenarios to generate and run. |
+| `PLATFORM` | Select API or UI tests | `api`, `web` | `api` |
+| `ENV` | Select the environment | `dev`, `stg`, `qa` | `dev` |
+| `TAGS` | Select labeled scenarios | `@API-001`, `@web`, or a tag expression | All scenarios for the selected platform |
 
-Base URLs are defined in `tests/configs/env.config.ts`. The web URL is currently `https://shop.qaautomationlabs.com`; the API URL is `https://api.qaautomationlabs.com/v1/`. Each platform currently uses the same URL for all three environments.
+| Test selection | `PLATFORM` | `TAGS` |
+| --- | --- | --- |
+| API availability | `api` | `@API-001` |
+| All API tests | `api` | `@api` |
+| Login page | `web` | `@TES-001` |
+| All UI tests | `web` | `@web` |
+| Web login tests | `web` | `@web and @login` |
 
-`PLATFORM` enables only the corresponding Playwright project: `api` uses `tests/api/`; `web` enables `web-chromium` and uses `tests/web/`. `ENV` selects that platform's base URL, and `TAGS` filters its scenarios. Keep the tags consistent with the selected platform.
+Tags are case-sensitive. Set `TAGS=` to select all scenarios for the chosen platform. Shell variables override `.env`; `.env` is ignored by Git.
 
-If no tests are selected, the error includes the active platform, environment, tags, and feature path. For example, `PLATFORM=web` with `TAGS=@API-001` selects no scenarios because that tag belongs to an API feature. Correct the platform or tags in `.env`; use an empty `TAGS` value to select all scenarios for the chosen platform. CLI filters such as `--grep` can also exclude every test.
+URLs are configured in [`tests/configs/env.config.ts`](tests/configs/env.config.ts). All three environments currently use the same URLs:
 
-## Test commands
+- API: `https://api.qaautomationlabs.com/v1`
+- Web: `https://shop.qaautomationlabs.com`
 
-Each test command generates Playwright tests with `bddgen`, then runs the selected project. API steps use the `request` fixture without launching a browser; web steps use Chromium.
+## Commands
 
-```sh
-# Run the suite selected in .env.
-npm test
+| Command | Purpose |
+| --- | --- |
+| `npm test` | Generate and run tests selected in `.env` |
+| `npm test -- --list` | List selected tests without running them |
+| `npm run lint` | Check code style and common mistakes |
+| `npx tsc --noEmit` | Check TypeScript types |
 
-# Run one API scenario (macOS/Linux).
-PLATFORM=api TAGS="@API-001" npm test
+`npm test` runs `bddgen` followed by Playwright. Generated tests are stored in `.features-gen/`; do not edit them.
 
-# Run the web login scenarios.
-PLATFORM=web ENV=dev TAGS="@web and @login" npm test
-
-# Run one tagged scenario.
-PLATFORM=web ENV=qa TAGS="@TES-001" npm test
-
-# Run all API scenarios, ignoring a tag filter from .env.
-PLATFORM=api TAGS="" npm test
-
-# Generate tests and list them without launching a browser.
-npx bddgen
-npx playwright test --list
-
-# Check code quality.
-npm run lint
-npx tsc --noEmit
-```
-
-Use the `.env` file for the same configuration on Windows. When running `npx playwright test` directly, generate the tests first after changing features, steps, or tag filters.
-
-Local web runs open Chromium with one worker. API runs use one worker without a browser. When `CI` is set, web runs are headless, all runs use two workers, and failed tests retry once. Traces are collected on the first retry.
-
-## Project structure
+## Test flow
 
 ```text
-tests/
-  configs/
-    env.config.ts              # Platform and environment URLs
-    run.config.ts              # Environment variables and defaults
-  core/
-    configReader.ts            # Reads the selected configuration
-    fixtures.ts                # Web/API factory fixtures and BDD functions
-    api/
-      baseRequest.ts           # Shared APIRequestContext reference
-      serviceFactory.ts        # Creates and caches API services
-    web/
-      basePage.ts              # Shared Playwright Page reference
-      webPageFactory.ts        # Creates and caches POM instances
-  web/
-    shared/
-      features/
-        login.feature          # Gherkin scenarios
-      stepDefs/
-        loginSteps.web.ts      # Connects Gherkin steps to POM methods
-      pageObjects/
-        login.pom.ts           # Login locators, actions, and assertions
-playwright.config.ts           # Separate API and web BDD projects
-reporting-labs.config.ts       # Report settings
+UI:  Feature → Step definition → WebPageFactory → POM
+API: Feature → Step definition → ServiceFactory → API service
 ```
 
-## Writing tests
+- **Features** contain scenarios written with `Given`, `When`, `Then`, and `And`.
+- **Step definitions** connect feature sentences to POM or service methods.
+- **POMs** contain page locators, browser actions, and checks. They extend `BasePage`, which holds the browser page.
+- **API services** contain requests and response checks. They extend `BaseRequest`, which holds the request client.
+- **Factories** create objects when needed and reuse them within one scenario.
+- **Fixtures** supply `webPageFactory` and `serviceFactory`. Steps import `Given`, `When`, `Then`, or `Step` from `tests/core/fixtures.ts`.
 
-The execution flow is:
+`PLATFORM=api` runs the API project without launching a browser. `PLATFORM=web` runs the Chromium project.
 
-```text
-Feature file → Step definition → WebPageFactory → POM method
-```
+Current tests:
 
-Feature files describe test scenarios. Step definitions register `Given`, `When`, `Then`, or `Step` functions imported from `tests/core/fixtures.ts` and delegate to POM methods:
+- `@API-001`: `verifyApiIsAvailable()` sends a GET request to the API URL and expects HTTP 200.
+- `@TES-001`: opens the shop and checks the **Sign in** heading. Credential entry and login submission are not implemented.
 
-```ts
-import { Given, Step } from "../../../core/fixtures";
+## Project files
 
-Given("user launches the web app", async ({ webPageFactory }) => {
-    await webPageFactory.getLoginPage().open();
-});
+| Location | Contents |
+| --- | --- |
+| `tests/api/shared/features/` | API scenarios |
+| `tests/api/shared/stepDefs/` | API step definitions |
+| `tests/api/shared/services/` | API requests and checks |
+| `tests/web/shared/features/` | UI scenarios |
+| `tests/web/shared/stepDefs/` | UI step definitions |
+| `tests/web/shared/pageObjects/` | Page locators, actions, and checks |
+| `tests/core/api/` | `BaseRequest` and `ServiceFactory` |
+| `tests/core/web/` | `BasePage` and `WebPageFactory` |
+| `tests/core/fixtures.ts` | Factory fixtures and BDD step functions |
+| `tests/core/ConfigReader.ts` | Reads platform, environment, tags, and URL |
+| `tests/core/selectionErrorReporter.ts` | Shows configuration details when no tests match |
+| `tests/configs/` | `.env` loading, defaults, and URLs |
+| `playwright.config.ts` | Project selection and test settings |
+| `reporting-labs.config.ts` | HTML report settings |
 
-Step("user verifies the login page", async ({ webPageFactory }) => {
-    await webPageFactory.getLoginPage().verifyLoginPage();
-});
-```
+## Add a test
 
-POM classes extend `BasePage`, which holds the Playwright `Page`. Keep locators, browser actions, and page assertions in the POM. `WebPageFactory` passes the same scenario's `Page` into each POM and caches its instance. Scenarios receive separate factories.
+1. Add a scenario and tag to a `.feature` file under `tests/api/` or `tests/web/`.
+2. Register its steps in the corresponding `stepDefs/` folder.
+3. Add the actions and checks to a POM or API service.
+4. Add a factory getter when introducing a new POM or service class.
+5. Set `PLATFORM` and `TAGS` in `.env`, then run `npm test`.
 
-API services extend `BaseRequest`, which holds Playwright's `APIRequestContext`. API steps receive `serviceFactory` and access services with methods such as `serviceFactory.getAuthService()`. The factory caches services within each scenario and uses the built-in `request` fixture, so Playwright manages request-context cleanup. API steps that only request `serviceFactory` or `request` do not initialize a browser. The current `@API-001` scenario sends a GET request to the API base URL and expects HTTP 200. Use endpoint paths without a leading slash to preserve the `/v1/` base URL prefix.
+Keep feature and step files directly inside `features/` and `stepDefs/` folders. New areas, such as `orders`, can follow the same structure as `shared`.
 
-To add a test:
+## Troubleshooting
 
-1. Add a `.feature` file under `tests/<platform>/<domain>/features/` and tag it appropriately.
-2. Add the corresponding step definitions under `stepDefs/`.
-3. Add or extend a POM under `pageObjects/`.
-4. Add a typed factory method to `WebPageFactory` when introducing a new web POM.
-
-The current BDD patterns discover `.feature` files directly inside `features/` folders and `.ts` files directly inside `stepDefs/` folders. Keep new files at those levels or update the patterns in `playwright.config.ts`.
-
-Use camelCase names and match file-name capitalization in imports. Keep required extensions and suffixes, such as `.feature`, `.pom.ts`, and `.web.ts`.
+| Problem | Fix |
+| --- | --- |
+| No tests found | Match `PLATFORM` and `TAGS`; `@API-001` requires `PLATFORM=api`. Check tag capitalization and CLI filters, or clear `TAGS`. |
+| Unsupported platform | Use `api` or `web`. |
+| Undefined environment | Use `dev`, `stg`, or `qa` and check `env.config.ts`. |
+| Missing browser | Run `npx playwright install chromium` for UI tests. |
+| Missing step definition | Match the feature sentence to a registered step in `stepDefs/`. |
+| API response is not 200 | Check the configured URL and response details in the report. |
 
 ## VS Code navigation
 
-Install [Cucumber (Gherkin) Full Support](https://marketplace.visualstudio.com/items?itemName=alexkrechik.cucumberautocomplete), extension ID `alexkrechik.cucumberautocomplete`.
-
-Add these settings to `.vscode/settings.json`, preserving your other editor settings:
+Install [Cucumber (Gherkin) Full Support](https://marketplace.visualstudio.com/items?itemName=alexkrechik.cucumberautocomplete). Add to `.vscode/settings.json`:
 
 ```json
 {
-  "files.associations": {
-    "*.feature": "feature"
-  },
+  "files.associations": { "*.feature": "feature" },
   "cucumberautocomplete.steps": ["tests/**/stepDefs/**/*.ts"],
   "cucumberautocomplete.syncfeatures": "tests/**/features/**/*.feature",
   "cucumberautocomplete.strictGherkinCompletion": false,
@@ -161,10 +134,12 @@ Add these settings to `.vscode/settings.json`, preserving your other editor sett
 }
 ```
 
-Reload VS Code, then Cmd+click on macOS or Ctrl+click on Windows/Linux to navigate from a feature step to its definition. This extension recognizes `Step(...)` as well as `Given`, `When`, and `Then`. The `.vscode` folder is ignored by Git, so each checkout needs its own settings.
+Reload VS Code. Cmd+click on macOS or Ctrl+click on Windows/Linux opens a step's definition. `.vscode` is ignored by Git.
 
 ## Reports and CI
 
-Test runs use the console list reporter and Reporting Labs. Automatic report opening is disabled, including after failures. Open `reporting-labs/index.html` manually to view the HTML report. Report options are configured in `reporting-labs.config.ts`; generated tests, reports, and test artifacts are ignored by Git.
+Open `reporting-labs/index.html` manually after a run. UI failures capture screenshots; traces are collected on the first retry.
 
-The GitHub Actions workflow is manually triggered. Its environment input is not currently passed to the test process, and it uploads `playwright-report/` rather than the configured Reporting Labs output. Set `PLATFORM`, `ENV`, and optional `TAGS` in the workflow and update the artifact path to `reporting-labs/`.
+Local runs use one worker with a visible UI browser. CI runs use two workers, one retry, and a hidden UI browser.
+
+The manual GitHub Actions workflow still needs its environment input connected to the tests and its report upload path changed from `playwright-report/` to `reporting-labs/`.
