@@ -1,6 +1,24 @@
 # Playwright BDD tests
 
-This project uses Playwright and feature files for browser and API tests. It is still being set up; there are no feature files or step definitions yet.
+This project uses Playwright and feature files for browser and API tests. The web login scenario is being set up; only its launch step is implemented so far.
+
+## Web page objects and step definitions
+
+Each POM extends `BasePage`, which holds a protected, readonly Playwright `page`. Keep locators, browser actions, and page-specific behavior in the POM.
+
+`WebPageFactory` lazily creates and caches POMs. The `webPageFactory` fixture creates one factory per scenario, so steps in that scenario share the same POM instances while parallel scenarios remain isolated.
+
+Feature files describe scenarios. Step definition files register Playwright-style `Given`, `When`, and `Then` functions imported from `tests/core/fixtures.ts`. Locators, browser actions, and page assertions belong in POMs.
+
+Each step receives `webPageFactory` directly from the fixture and calls a POM method:
+
+```ts
+Given("user launches the web app", async ({ webPageFactory }) => {
+    await webPageFactory.getLoginPage().open();
+});
+```
+
+To add a POM, extend `BasePage`, pass `page` to `super(page)`, and add a typed method to `WebPageFactory` that creates and caches the POM. To add a step, register a function in the corresponding step definition file and call its POM method. The BDD configuration includes the fixture file and step definition files in its `steps` patterns.
 
 ## Set up
 
@@ -11,7 +29,7 @@ npx playwright install chromium
 
 ## Add tests
 
-Put feature files in a `features` folder under `tests`, and their TypeScript step definitions in a `steps` folder. For example:
+Put feature files in a `features` folder under `tests`, and their TypeScript step definitions in a `stepDefs` folder. For example:
 
 ```text
 tests/
@@ -19,7 +37,7 @@ tests/
     features/
       login.feature
       shoppingCart.feature
-    steps/
+    stepDefs/
       login.ts
       shoppingCart.ts
 ```

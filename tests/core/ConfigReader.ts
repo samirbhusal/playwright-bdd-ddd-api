@@ -4,6 +4,7 @@ import { envType, plaftormType } from "../utils/types";
 
 
 export class ConfigReader {
+
   static getPlatform(): plaftormType {
     return runConfig.platform as plaftormType;
   }
