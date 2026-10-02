@@ -31,9 +31,9 @@ const config: ReportingLabsOptions = {
   // embedAttachments: true,                          // inline screenshots as base64: one file, opens anywhere
   // embedLimit: 2 * 1024 * 1024,                     // attachments bigger than this (bytes) are copied as files
   // embedVideos: false,                              // true = videos inside the HTML too (bigger file, no folder issues)
-  // announce: true,                                  // print the report path after the run
+  announce: false,                                  // print the report path after the run
   open: "never",                                    // Open reporting-labs/index.html manually.
-  // warnMissingMeta: true,                           // after the run, list tests that have no meta() in the console
+  warnMissingMeta: false,                           // after the run, list tests that have no meta() in the console
 
   // ── Test details ─────────────────────────────────────────────────────────────
   // Values come from meta({ priority, severity, owner, feature, epic, story, ... }) in your tests.
