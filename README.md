@@ -1,6 +1,6 @@
 # Playwright BDD Framework
 
-TypeScript test framework using Playwright, Gherkin feature files, and page objects. Step definitions call POM methods through a scenario-scoped `WebPageFactory`.
+TypeScript test framework using Playwright, Gherkin feature files, page objects, and API services. Step definitions access POMs through `webPageFactory` and API services through `serviceFactory`.
 
 The current web scenario opens the shop and verifies its login page. Credential entry and login submission are commented out in the feature file and are not implemented yet.
 
@@ -13,12 +13,12 @@ npm ci
 npx playwright install chromium
 ```
 
-Create a `.env` file in the project root to select the web tests:
+Create a `.env` file in the project root to select the suite, environment, and scenarios:
 
 ```dotenv
-PLATFORM=web
+PLATFORM=api
 ENV=dev
-TAGS=@web
+TAGS=@API-001
 ```
 
 Then run:
@@ -27,7 +27,7 @@ Then run:
 npm test
 ```
 
-The `.env` file is optional and ignored by Git. Without environment overrides or a `.env` file, the framework defaults to `PLATFORM=api`, `ENV=dev`, and `TAGS=@api`. The current feature is tagged `@web`, so those defaults do not select it.
+The `.env` file is ignored by Git. Without overrides, the framework defaults to `PLATFORM=api`, `ENV=dev`, and no tag filter. Set `PLATFORM=web` and `TAGS=@web` to run UI tests using the same `npm test` command.
 
 ## Environment configuration
 
@@ -35,28 +35,39 @@ Configuration is read from environment variables and the root `.env` file in `te
 
 | Variable | Supported values | Default | Purpose |
 | --- | --- | --- | --- |
-| `PLATFORM` | `web`, `api` | `api` | Selects the base URL configuration. |
+| `PLATFORM` | `web`, `api` | `api` | Selects the UI or API project. |
 | `ENV` | `dev`, `stg`, `qa` | `dev` | Selects the target environment. |
-| `TAGS` | Gherkin tag expression | `@api` | Selects scenarios to generate and run. |
+| `TAGS` | Gherkin tag expression | No filter | Selects scenarios to generate and run. |
 
-Base URLs are defined in `tests/configs/env.config.ts`. The web URL is currently `https://shop.qaautomationlabs.com`; the API URL is `https://api.qaautomationlabs.com/`. Each platform currently uses the same URL for all three environments.
+Base URLs are defined in `tests/configs/env.config.ts`. The web URL is currently `https://shop.qaautomationlabs.com`; the API URL is `https://api.qaautomationlabs.com/v1/`. Each platform currently uses the same URL for all three environments.
 
-`PLATFORM` selects the URL; `TAGS` selects the scenarios. Set both when switching between web and API tests.
+`PLATFORM` enables only the corresponding Playwright project: `api` uses `tests/api/`; `web` enables `web-chromium` and uses `tests/web/`. `ENV` selects that platform's base URL, and `TAGS` filters its scenarios. Keep the tags consistent with the selected platform.
+
+If no tests are selected, the error includes the active platform, environment, tags, and feature path. For example, `PLATFORM=web` with `TAGS=@API-001` selects no scenarios because that tag belongs to an API feature. Correct the platform or tags in `.env`; use an empty `TAGS` value to select all scenarios for the chosen platform. CLI filters such as `--grep` can also exclude every test.
 
 ## Test commands
 
-`npm test` generates Playwright tests with `bddgen`, then runs them in Chromium.
+Each test command generates Playwright tests with `bddgen`, then runs the selected project. API steps use the `request` fixture without launching a browser; web steps use Chromium.
 
 ```sh
-# Run the web login scenarios with environment overrides (macOS/Linux).
+# Run the suite selected in .env.
+npm test
+
+# Run one API scenario (macOS/Linux).
+PLATFORM=api TAGS="@API-001" npm test
+
+# Run the web login scenarios.
 PLATFORM=web ENV=dev TAGS="@web and @login" npm test
 
 # Run one tagged scenario.
 PLATFORM=web ENV=qa TAGS="@TES-001" npm test
 
+# Run all API scenarios, ignoring a tag filter from .env.
+PLATFORM=api TAGS="" npm test
+
 # Generate tests and list them without launching a browser.
-PLATFORM=web ENV=dev TAGS=@web npx bddgen
-PLATFORM=web ENV=dev TAGS=@web npx playwright test --list
+npx bddgen
+npx playwright test --list
 
 # Check code quality.
 npm run lint
@@ -65,7 +76,7 @@ npx tsc --noEmit
 
 Use the `.env` file for the same configuration on Windows. When running `npx playwright test` directly, generate the tests first after changing features, steps, or tag filters.
 
-Local runs open Chromium with one worker. When `CI` is set, runs are headless, use two workers, and retry failed tests once. Traces are collected on the first retry.
+Local web runs open Chromium with one worker. API runs use one worker without a browser. When `CI` is set, web runs are headless, all runs use two workers, and failed tests retry once. Traces are collected on the first retry.
 
 ## Project structure
 
@@ -76,7 +87,10 @@ tests/
     run.config.ts              # Environment variables and defaults
   core/
     configReader.ts            # Reads the selected configuration
-    fixtures.ts                # Factory fixture and BDD functions
+    fixtures.ts                # Web/API factory fixtures and BDD functions
+    api/
+      baseRequest.ts           # Shared APIRequestContext reference
+      serviceFactory.ts        # Creates and caches API services
     web/
       basePage.ts              # Shared Playwright Page reference
       webPageFactory.ts        # Creates and caches POM instances
@@ -88,7 +102,7 @@ tests/
         loginSteps.web.ts      # Connects Gherkin steps to POM methods
       pageObjects/
         login.pom.ts           # Login locators, actions, and assertions
-playwright.config.ts           # BDD discovery and browser settings
+playwright.config.ts           # Separate API and web BDD projects
 reporting-labs.config.ts       # Report settings
 ```
 
@@ -115,6 +129,8 @@ Step("user verifies the login page", async ({ webPageFactory }) => {
 ```
 
 POM classes extend `BasePage`, which holds the Playwright `Page`. Keep locators, browser actions, and page assertions in the POM. `WebPageFactory` passes the same scenario's `Page` into each POM and caches its instance. Scenarios receive separate factories.
+
+API services extend `BaseRequest`, which holds Playwright's `APIRequestContext`. API steps receive `serviceFactory` and access services with methods such as `serviceFactory.getAuthService()`. The factory caches services within each scenario and uses the built-in `request` fixture, so Playwright manages request-context cleanup. API steps that only request `serviceFactory` or `request` do not initialize a browser. The current `@API-001` scenario sends a GET request to the API base URL and expects HTTP 200. Use endpoint paths without a leading slash to preserve the `/v1/` base URL prefix.
 
 To add a test:
 
@@ -149,6 +165,6 @@ Reload VS Code, then Cmd+click on macOS or Ctrl+click on Windows/Linux to naviga
 
 ## Reports and CI
 
-Test runs use the console list reporter and Reporting Labs. Open `reporting-labs/index.html` after a run to view the HTML report. Report options are configured in `reporting-labs.config.ts`; generated tests, reports, and test artifacts are ignored by Git.
+Test runs use the console list reporter and Reporting Labs. Automatic report opening is disabled, including after failures. Open `reporting-labs/index.html` manually to view the HTML report. Report options are configured in `reporting-labs.config.ts`; generated tests, reports, and test artifacts are ignored by Git.
 
-The GitHub Actions workflow is manually triggered. Its environment input is not currently passed to the test process, and it uploads `playwright-report/` rather than the configured Reporting Labs output. Before using it for web tests, set `PLATFORM`, `ENV`, and `TAGS` in the workflow and update the artifact path to `reporting-labs/`.
+The GitHub Actions workflow is manually triggered. Its environment input is not currently passed to the test process, and it uploads `playwright-report/` rather than the configured Reporting Labs output. Set `PLATFORM`, `ENV`, and optional `TAGS` in the workflow and update the artifact path to `reporting-labs/`.

@@ -6,11 +6,15 @@ import { envType, plaftormType } from "../utils/types";
 export class ConfigReader {
 
   static getPlatform(): plaftormType {
-    return runConfig.platform as plaftormType;
+    const platform = runConfig.platform;
+    if (platform !== "api" && platform !== "web") {
+      throw new Error(`Unsupported platform '${platform}'. Use 'api' or 'web'.`);
+    }
+    return platform;
   }
 
   static getEnv(): envType {
-    return runConfig.platformValues.env as envType;
+    return runConfig.env as envType;
   }
 
   static getBaseUrl(): string {
@@ -23,6 +27,6 @@ export class ConfigReader {
   }
 
   static getTags(): string {
-    return runConfig.platformValues.tags;
+    return runConfig.tags;
   }
 }
