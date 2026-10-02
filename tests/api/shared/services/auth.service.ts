@@ -6,7 +6,7 @@ export class AuthService extends BaseRequest {
         super(request);
     }
 
-    async verifyRequestContext(): Promise<void> {
+    async verifyApiIsAvailable(): Promise<void> {
         const response = await this.request.get("");
         expect(response.status()).toBe(200);
     }
