@@ -2,7 +2,7 @@ import { expect, type APIRequestContext } from "@playwright/test";
 import { BaseRequest } from "../../../core/api/baseRequest";
 import { AuthLoginResponse } from "../../utils/apiTypes";
 
-type recordType = Record<string | number, string | number>;
+type recordType = Record<string, string>;
 
 export class AuthService extends BaseRequest {
     constructor(request: APIRequestContext) {
