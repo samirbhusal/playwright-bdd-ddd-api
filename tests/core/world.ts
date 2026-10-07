@@ -1,5 +1,7 @@
-import { AuthLoginResponse } from "../api/utils/apiTypes";
+import { AuthLoginErrorResponse, AuthLoginResponse } from "../api/utils/apiTypes";
 
 export interface World {
-    apiResponse?: AuthLoginResponse;
+    statusCode?: number;
+    loginResponseBody?: AuthLoginResponse;
+    apiResponse?: AuthLoginResponse | AuthLoginErrorResponse;
 }

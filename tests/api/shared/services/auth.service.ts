@@ -1,6 +1,5 @@
-import { expect, type APIRequestContext } from "@playwright/test";
+import { APIResponse, expect, type APIRequestContext } from "@playwright/test";
 import { BaseRequest } from "../../../core/api/baseRequest";
-import { AuthLoginResponse } from "../../utils/apiTypes";
 
 type recordType = Record<string, string>;
 
@@ -10,15 +9,15 @@ export class AuthService extends BaseRequest {
     }
 
     async verifyApiIsAvailable(): Promise<void> {
-        const response = await this.request.get("");
+        const response = await this.request.get("/");
+        console.log("API Availability Response Status:", response.text());
         expect(response.status()).toBe(200);
     }
 
-    async sendPostRequestForLogin(endpoint: string, payload: recordType): Promise<AuthLoginResponse> {
+    async sendPostRequestForLogin(endpoint: string, payload: recordType): Promise<APIResponse> {
         const response = await this.request.post(endpoint, {
             data: payload,
         });
-        expect(response.status()).toBe(200);
-        return response.json() as Promise<AuthLoginResponse>;
+        return response;
     }
 }
