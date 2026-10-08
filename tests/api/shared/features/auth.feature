@@ -6,7 +6,7 @@ Feature: Auth Feature
     Background:
         Given user launches the api services
 
-    @API-001
+    @API-001 @smoke
     Scenario: Verify Auth API with valid credentials
         When user sends POST request to "auth/login" with valid credentials
             | email    | qa@demo.io  |
