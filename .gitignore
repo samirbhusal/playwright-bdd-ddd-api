@@ -16,3 +16,4 @@ node_modules/
 reporting-labs.history.json
 .features-gen/
 reporting-labs/
+reports/
