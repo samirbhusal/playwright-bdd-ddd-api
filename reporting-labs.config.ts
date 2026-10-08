@@ -1,6 +1,6 @@
 import "reporting-labs/auto";   // records every request.* / page.request call in the report (remove to switch off)
 import type { ReportingLabsOptions } from "reporting-labs";
-import { ConfigReader } from "./tests/core/configReader";
+import { ConfigReader } from "./tests/core/ConfigReader";
 
 
 
@@ -25,7 +25,7 @@ const config: ReportingLabsOptions = {
   // env: { 'App version': '2.4.0', 'Test data': 'staging-seed-12' },   // extra rows on the Environment card
 
   // ── Output ───────────────────────────────────────────────────────────────────
-  // outputFolder: 'reporting-labs',                  // where index.html and copied attachments go
+  outputFolder: "reports",                  // where index.html and copied attachments go
   // outputFile: 'index.html',
   // emitJson: true,                                // also write report.json (used by `reporting-labs merge` for sharded runs)
   // embedAttachments: true,                          // inline screenshots as base64: one file, opens anywhere

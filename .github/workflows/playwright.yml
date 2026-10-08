@@ -2,7 +2,7 @@ name: Playwright Tests
 on:
   workflow_dispatch:
     inputs:
-      enviroment:
+      environment:
         description: 'Target Environment'
         required: true
         default: 'qa'
@@ -10,10 +10,29 @@ on:
         options:
           - qa
           - dev
+          - stg
+      platform:
+        description: 'Select Platform'
+        required: true
+        default: 'web'
+        type: choice
+        options:
+          - web
+          - api
+      tags:
+        description: 'Tags'
+        required: true
+        default: '@web and @smoke'
+        type: string
+      
 jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    env:
+      PLATFORM: ${{ inputs.platform }}
+      ENV: ${{ inputs.environment }}
+      TAGS: ${{ inputs.tags }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
@@ -28,6 +47,6 @@ jobs:
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
-        name: playwright-report
-        path: playwright-report/
+        name: Report
+        path: reports/
         retention-days: 30

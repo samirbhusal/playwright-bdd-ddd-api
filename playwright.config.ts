@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 import { defineBddProject } from "playwright-bdd";
-import { ConfigReader } from "./tests/core/configReader";
 import reportingLabs from "./reporting-labs.config";
+import { ConfigReader } from "./tests/core/ConfigReader";
 
 export default defineConfig({
   fullyParallel: true,
