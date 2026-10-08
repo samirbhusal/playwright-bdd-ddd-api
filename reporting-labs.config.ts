@@ -1,6 +1,6 @@
 import "reporting-labs/auto";   // records every request.* / page.request call in the report (remove to switch off)
 import type { ReportingLabsOptions } from "reporting-labs";
-import { ConfigReader } from "./tests/core/configReader";
+import { ConfigReader } from "./tests/core/ConfigReader";
 
 
 
