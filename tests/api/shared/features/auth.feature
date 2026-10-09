@@ -11,7 +11,8 @@ Feature: Auth Feature
         When user sends POST request to "auth/login" with valid credentials
             | email    | qa@demo.io  |
             | password | Password123 |
-        Then user verifies the response data
+        Then response status code should be 200
+        And user verifies the response data
             | email | qa@demo.io   |
             | name  | QA Demo User |
             | role  | admin        |
@@ -21,9 +22,9 @@ Feature: Auth Feature
         When user sends POST request to "auth/login" with invalid credentials
             | email    | <email>    |
             | password | <password> |
-        Then user verifies the response data
+        Then response status code should be <status>
+        And user verifies the response data
             | code          | <code>          |
-            | status        | <status>        |
             | message       | <message>       |
             | emailField    | <emailField>    |
             | passwordField | <passwordField> |

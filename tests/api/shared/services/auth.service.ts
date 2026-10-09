@@ -10,7 +10,6 @@ export class AuthService extends BaseRequest {
 
     async verifyApiIsAvailable(): Promise<void> {
         const response = await this.request.get("/");
-        console.log("API Availability Response Status:", response.text());
         expect(response.status()).toBe(200);
     }
 

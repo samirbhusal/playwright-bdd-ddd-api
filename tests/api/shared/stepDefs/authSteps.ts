@@ -1,5 +1,5 @@
 import { DataTable } from "playwright-bdd";
-import { Given, Then, When } from "../../../core/fixtures";
+import { Given, Step, Then, When } from "../../../core/fixtures";
 import { expect } from "@playwright/test";
 import { AuthLoginErrorResponse, AuthLoginResponse } from "../../utils/apiTypes";
 
@@ -14,8 +14,14 @@ When("user sends POST request to {string} with {word} credentials", async ({ ser
     world.apiResponse = await res.json() as AuthLoginResponse | AuthLoginErrorResponse;
 });
 
-Then("user verifies the response data", ({ world }, dataTable: DataTable) => {
+
+Then("response status code should be {int}", ({ world }, statusCode: number) => {
+    expect(world.statusCode).toBe(statusCode);
+});
+
+Step("user verifies the response data", ({ world }, dataTable: DataTable) => {
     const expectedData = dataTable.rowsHash();
+    const expectedStatusCode = world.statusCode?.toString() ?? "";
     const response = world.apiResponse;
 
     // Add your assertion logic here
@@ -33,21 +39,18 @@ Then("user verifies the response data", ({ world }, dataTable: DataTable) => {
     if ("error" in response) {
         expect(response.error.code).toBe(expectedData.code);
         expect(response.error.message).toContain(expectedData.message);
-        expect(response.error.status).toBe(Number(expectedData.status));
+
     }
 
-    if ("error" in response && expectedData.status === "422") {
-        console.log("Response error details:", response.error.details);
+    if ("error" in response && expectedStatusCode === "422") {
         const details = response.error.details ?? [];
         const emailError = details.find(detail => detail.field === "email")?.message;
         const passwordError = details.find(detail => detail.field === "password")?.message;
 
         if (expectedData.emailField) {
-            console.log("Email error message:", emailError);
             expect(emailError).toBe(expectedData.emailField);
         }
         if (expectedData.passwordField) {
-            console.log("Password error message:", passwordError);
             expect(passwordError).toBe(expectedData.passwordField);
         }
     }
